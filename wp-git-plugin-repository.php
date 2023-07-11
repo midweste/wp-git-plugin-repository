@@ -15,7 +15,7 @@ namespace GitPluginRepository;
  * Version:           1.0.0
  * Author:            Midweste
  * Author URI:        https://github.org/midweste/wp-git-plugin-repository
- * Update URI:        https://api.github.com/repos/midweste/wp-git-plugin-repository/commits/master
+ * Update URI:        https://raw.githubusercontent.com/midweste/wp-git-plugin-repository/main/wp-git-plugin-repository.php
  * License:           GPL-2.0+
  */
 
