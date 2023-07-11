@@ -621,16 +621,6 @@ class Github extends UpdaterBase
     }
 }
 
-class MuUpdater
-{
-}
-
-add_filter('network_admin_plugin_action_links_' . plugin_basename(__FILE__), function ($links) {
-    $update_url = plugins_url('', __FILE__) . '/' . basename(__FILE__) . '?action=update';
-    $links[] = '<a href="' . $update_url . '">' . __('Update') . '</a>';
-    return $links;
-});
-
 // apply_filters( 'plugin_row_meta', $plugin_meta, $plugin_file, $plugin_data, $status );
 add_filter('plugin_row_meta', function ($plugin_meta, $plugin_file, $plugin_data, $status) {
     // check for new version
