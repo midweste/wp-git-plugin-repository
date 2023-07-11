@@ -3,12 +3,6 @@
 namespace GitPluginRepository;
 
 /*
- *
- * @link              https://github.org/midweste/wp-git-plugin-repository
- * @since             1.0.0
- * @package           WordPress Github/Bitbucket Plugin Updater
- *
- * @wordpress-plugin
  * Plugin Name:       WordPress Github/Bitbucket Plugin Updater
  * Plugin URI:        https://github.org/midweste/wp-git-plugin-repository
  * Description:       Use a Github/Bitbucket public repo api as a plugin repository for plugin updates.
@@ -250,8 +244,21 @@ class Helpers
     public static function update(): bool
     {
         try {
-            WP_Filesystem();
-            $tmp_file = download_url($package_url);
+            $plugin_data = get_plugin_data(__FILE__);
+            if (!isset($plugin_data['UpdateURI'])) {
+                return false;
+            }
+
+            // Download the file
+            $tmp_file = download_url($plugin_data['UpdateURI']);
+            if (is_wp_error($tmp_file)) {
+                return false;
+            }
+
+            // Replace the version in the file
+            $new_version = Helpers::check_updater_updates();
+            Helpers::replace_version_in_file($tmp_file, $plugin_data, $new_version);
+
             // Copy the file to the destination
             if (!copy($tmp_file, __FILE__)) {
                 return false;
@@ -260,6 +267,40 @@ class Helpers
             throw new \Exception(sprintf('Could not update. %s', $e->getMessage()));
         }
         return true;
+    }
+
+    public static function check_updater_updates(): ?string
+    {
+        $url = "https://api.github.com/repos/midweste/wp-git-plugin-repository/commits/main";
+        $request = wp_remote_get($url);
+        $response = json_decode(wp_remote_retrieve_body($request), true);
+        if ($response === false || !isset($response['commit']['committer']['date'])) {
+            return null;
+        }
+        return Helpers::date_to_version($response['commit']['committer']['date']);
+    }
+
+    public static function replace_version_in_file(string $file, array $plugin_data, string $new_version): bool
+    {
+        if (!is_file($file)) {
+            return false;
+        }
+
+        WP_Filesystem();
+        global $wp_filesystem;
+        $contents = $wp_filesystem->get_contents($file);
+        $current_plugin_version = $plugin_data['Version'];
+        $pattern = preg_quote($current_plugin_version, '/');
+        $has_version = (preg_match("/Version:\s*$pattern/", $contents, $matches)) ? true : false;
+
+        if ($has_version) {
+            // replace the version string in plugin file with new version
+            $contents = preg_replace('/(Version:\s*)' . preg_quote($current_plugin_version) . '/', '${1}' . $new_version, $contents);
+        } else {
+            // add version string to plugin file after Name:
+            $contents = preg_replace('/(Name:\s*)' . preg_quote($plugin_data['Name']) . '/', '${1}' . $plugin_data['Name'] . "\n * Version: " . $new_version, $contents);
+        }
+        return $wp_filesystem->put_contents($file, $contents);
     }
 
     public static function zip_proxy(string $url, string $plugin_file, string $new_version): string
@@ -278,9 +319,7 @@ class Helpers
 
 
         try {
-            WP_Filesystem();
-            global $wp_filesystem;
-
+            // create cache folder if it doesn't exist
             if (!is_dir($cache_path)) {
                 wp_mkdir_p($cache_path);
             }
@@ -299,19 +338,9 @@ class Helpers
             $first_subfolder = current($subfolder);
 
             // replace version number in newly downloaded plugin before zipping
-            $current_plugin_data = get_plugin_data(WP_PLUGIN_DIR . \DIRECTORY_SEPARATOR . $plugin_file);
-            $current_plugin_version = isset($current_plugin_data['Version']) ? $current_plugin_data['Version'] : false;
-
             $new_plugin_file_path = $first_subfolder . \DIRECTORY_SEPARATOR . $slug . '.php';
-            $new_plugin_contents = $wp_filesystem->get_contents($new_plugin_file_path);
-            if ($current_plugin_version) {
-                // replace the version string in plugin file with new version
-                $new_plugin_contents = preg_replace('/Version: ' . $current_plugin_version . '/', 'Version: ' . $new_version, $new_plugin_contents);
-            } else {
-                // add version string to plugin file after Name:
-                $new_plugin_contents = preg_replace('/Name: ' . $current_plugin_data['Name'] . '/', 'Name: ' . $current_plugin_data['Name'] . "\n * Version: " . $new_version, $new_plugin_contents);
-            }
-            $wp_filesystem->put_contents($new_plugin_file_path, $new_plugin_contents);
+            $current_plugin_data = get_plugin_data(WP_PLUGIN_DIR . \DIRECTORY_SEPARATOR . $plugin_file);
+            Helpers::replace_version_in_file($new_plugin_file_path, $current_plugin_data, $new_version);
 
             // wrap it up
             self::zip($zipfile_path, $first_subfolder, $slug);
@@ -592,6 +621,10 @@ class Github extends UpdaterBase
     }
 }
 
+class MuUpdater
+{
+}
+
 add_filter('network_admin_plugin_action_links_' . plugin_basename(__FILE__), function ($links) {
     $update_url = plugins_url('', __FILE__) . '/' . basename(__FILE__) . '?action=update';
     $links[] = '<a href="' . $update_url . '">' . __('Update') . '</a>';
@@ -600,17 +633,35 @@ add_filter('network_admin_plugin_action_links_' . plugin_basename(__FILE__), fun
 
 // apply_filters( 'plugin_row_meta', $plugin_meta, $plugin_file, $plugin_data, $status );
 add_filter('plugin_row_meta', function ($plugin_meta, $plugin_file, $plugin_data, $status) {
-    // $plugin_data = get_plugin_data($plugin_file, false, false);
-    // if (empty(trim($plugin_data['UpdateURI'])) || !filter_var($plugin_data['UpdateURI'], FILTER_VALIDATE_URL)) {
-    //     throw new \Exception(sprintf('Missing or invalid Update URI.'));
-    // }
+    // check for new version
+    $new_version = Helpers::check_updater_updates();
+    if (empty($new_version) || !version_compare($new_version, $plugin_data['Version'], '>')) {
+        return $plugin_meta;
+    }
 
+    // add update link
+    $update_url = get_permalink();
+    $update_url = add_query_arg('action', 'mu-update', $update_url);
+    $update_url = add_query_arg('file', __FILE__, $update_url);
 
-    // d(get_defined_vars());
-    // $updater = new Github($plugin_file);
+    $update_link = '<strong><a href="' . $update_url . '">Update to ' . $new_version . '</a></strong>';
+    $plugin_meta[] = $update_link;
+
+    return $plugin_meta;
 }, 10, 4);
 
+
+
 add_action('admin_init', function () {
+    if (isset($_GET['action']) && $_GET['action'] === 'mu-update' && isset($_GET['file']) && $_GET['file'] === __FILE__) {
+        Helpers::update();
+        $update_url = get_permalink();
+        $update_url = remove_query_arg('action', $update_url);
+        $update_url = remove_query_arg('file', $update_url);
+        wp_safe_redirect($update_url);
+        exit;
+    }
+
     // for testing, reset update cache
     wp_clean_update_cache();
 
