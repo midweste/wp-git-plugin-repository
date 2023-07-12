@@ -12,7 +12,6 @@ namespace GitPluginRepository;
  * License:           GPL-2.0+
  */
 
-
 /*
 * GithubUpdater Plugin Updater
 * Specify Update URI: in your plugin comment block
@@ -290,14 +289,14 @@ class Helpers
         $contents = $wp_filesystem->get_contents($file);
         $current_plugin_version = $plugin_data['Version'];
         $pattern = preg_quote($current_plugin_version, '/');
-        $has_version = (preg_match("/Version:\s*$pattern/", $contents, $matches)) ? true : false;
+        $has_version = (preg_match("/Version:2023.07.11.23.03.46\s*$pattern/", $contents, $matches)) ? true : false;
 
         if ($has_version) {
             // replace the version string in plugin file with new version
-            $contents = preg_replace('/(Version:\s*)' . preg_quote($current_plugin_version) . '/', '${1}' . $new_version, $contents);
+            $contents = preg_replace('/(Version:2023.07.11.23.03.46\s*)' . preg_quote($current_plugin_version) . '/', '${1}' . $new_version, $contents);
         } else {
             // add version string to plugin file after Name:
-            $contents = preg_replace('/(Name:\s*)' . preg_quote($plugin_data['Name']) . '/', '${1}' . $plugin_data['Name'] . "\n * Version: " . $new_version, $contents);
+            $contents = preg_replace('/(Name:\s*)' . preg_quote($plugin_data['Name']) . '/', '${1}' . $plugin_data['Name'] . "\n * Version: 2023.07.11.23.03.46" . $new_version, $contents);
         }
         return $wp_filesystem->put_contents($file, $contents);
     }
@@ -474,16 +473,6 @@ class Bitbucket extends UpdaterBase
     }
 }
 
-/*
-* GithubUpdater Plugin Updater
-* Specify Update URI: in your plugin comment block
-* Use releases for updates:
-* Update URI: https://api.github.com/repos/{$repoOwner}/{$repoName}/releases
-* Use a branch for updates:
-* Update URI: https://api.github.com/repos/{$repoOwner}/{$repoName}/commits/{$repoBranch}
-* Use tags for updates:
-* Update URI: https://api.github.com/repos/{$repoOwner}/{$repoName}/ref/tags
-*/
 class Github extends UpdaterBase
 {
     protected static string $updateHost = 'api.github.com';
@@ -622,6 +611,17 @@ class Github extends UpdaterBase
 
 // apply_filters( 'plugin_row_meta', $plugin_meta, $plugin_file, $plugin_data, $status );
 add_filter('plugin_row_meta', function ($plugin_meta, $plugin_file, $plugin_data, $status) {
+    if ($status !== 'mustuse') {
+        return $plugin_meta;
+    }
+
+    // dont show for other plugins
+    $plugin_path = __DIR__ . '/' . $plugin_file;
+    $this_path = __FILE__;
+    if ($plugin_path !== $this_path) {
+        return $plugin_meta;
+    }
+
     // check for new version
     $new_version = Helpers::check_updater_updates();
     if (empty($new_version) || !version_compare($new_version, $plugin_data['Version'], '>')) {
@@ -638,8 +638,6 @@ add_filter('plugin_row_meta', function ($plugin_meta, $plugin_file, $plugin_data
 
     return $plugin_meta;
 }, 10, 4);
-
-
 
 add_action('admin_init', function () {
     if (isset($_GET['action']) && $_GET['action'] === 'mu-update' && isset($_GET['file']) && $_GET['file'] === __FILE__) {
