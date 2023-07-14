@@ -629,7 +629,7 @@ add_filter('plugin_row_meta', function ($plugin_meta, $plugin_file, $plugin_data
     }
 
     // add current version
-    array_unshift($plugin_meta, 'Version: ' . (!empty($plugin_data['Version']) ? $plugin_data['Version'] : '-'));
+    // array_unshift($plugin_meta, 'Version: ' . (!empty($plugin_data['Version']) ? $plugin_data['Version'] : '-'));
 
     // check for new version
     $new_version = Helpers::check_updater_updates();
