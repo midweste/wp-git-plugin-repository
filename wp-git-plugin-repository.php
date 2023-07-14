@@ -9,7 +9,7 @@ namespace GitPluginRepository;
  * Author:            Midweste
  * Author URI:        https://github.org/midweste/wp-git-plugin-repository
  * Update URI:        https://raw.githubusercontent.com/midweste/wp-git-plugin-repository/main/wp-git-plugin-repository.php
- * License:           GPL-2.0+
+ * License:           MIT
  */
 
 /*
@@ -249,7 +249,7 @@ class Helpers
 
             // Download the file
             $tmp_file = download_url($plugin_data['UpdateURI']);
-            if (is_wp_error($tmp_file)) {
+            if (is_wp_error($tmp_file) || filesize($tmp_file) === 0) {
                 return false;
             }
 
@@ -257,6 +257,11 @@ class Helpers
             $new_version = Helpers::check_updater_updates();
             Helpers::replace_version_in_file($tmp_file, $plugin_data, $new_version);
 
+            // Bail if replace went awry
+            if (filesize($tmp_file) === 0) {
+                return false;
+            }
+            
             // Copy the file to the destination
             if (!copy($tmp_file, __FILE__)) {
                 return false;
