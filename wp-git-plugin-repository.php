@@ -294,14 +294,14 @@ class Helpers
         $contents = $wp_filesystem->get_contents($file);
         $current_plugin_version = $plugin_data['Version'];
         $pattern = preg_quote($current_plugin_version, '/');
-        $has_version = (preg_match("/Version:2023.07.11.23.03.46\s*$pattern/", $contents, $matches)) ? true : false;
+        $has_version = (preg_match("/Version:\s*$pattern/", $contents, $matches)) ? true : false;
 
         if ($has_version) {
             // replace the version string in plugin file with new version
-            $contents = preg_replace('/(Version:2023.07.11.23.03.46\s*)' . preg_quote($current_plugin_version) . '/', '${1}' . $new_version, $contents);
+            $contents = preg_replace('/(Version:\s*)' . preg_quote($current_plugin_version) . '/', '${1}' . $new_version, $contents);
         } else {
             // add version string to plugin file after Name:
-            $contents = preg_replace('/(Name:\s*)' . preg_quote($plugin_data['Name']) . '/', '${1}' . $plugin_data['Name'] . "\n * Version: 2023.07.11.23.03.46" . $new_version, $contents);
+            $contents = preg_replace('/(Name:\s*)' . preg_quote($plugin_data['Name']) . '/', '${1}' . $plugin_data['Name'] . "\n * Version: " . $new_version, $contents);
         }
         return $wp_filesystem->put_contents($file, $contents);
     }
