@@ -4,8 +4,9 @@ namespace GitPluginRepository;
 
 /*
  * Plugin Name:       WordPress Github/Bitbucket Plugin Updater
+ * Version: 2023.07.14.23.15.38
  * Plugin URI:        https://github.org/midweste/wp-git-plugin-repository
- * Description:       Use a Github/Bitbucket public repo api as a plugin repository for plugin updates.
+ * Description:       Use a Github/Bitbucket public repo api as a plugin repository for Wordpress plugin updates.
  * Author:            Midweste
  * Author URI:        https://github.org/midweste/wp-git-plugin-repository
  * Update URI:        https://raw.githubusercontent.com/midweste/wp-git-plugin-repository/main/wp-git-plugin-repository.php
@@ -169,7 +170,7 @@ abstract class UpdaterBase
     }
 }
 
-class Helpers
+class Helpers //phpcs:ignore Generic.Files.OneObjectStructurePerFile.MultipleFound
 {
     public static function date_to_version(string $date): string
     {
@@ -254,8 +255,8 @@ class Helpers
             }
 
             // Replace the version in the file
-            $new_version = Helpers::check_updater_updates();
-            Helpers::replace_version_in_file($tmp_file, $plugin_data, $new_version);
+            $new_version = self::check_updater_updates();
+            self::replace_version_in_file($tmp_file, $plugin_data, $new_version);
 
             // Bail if replace went awry
             if (filesize($tmp_file) === 0) {
@@ -274,13 +275,13 @@ class Helpers
 
     public static function check_updater_updates(): ?string
     {
-        $url = "https://api.github.com/repos/midweste/wp-git-plugin-repository/commits/main";
+        $url = 'https://api.github.com/repos/midweste/wp-git-plugin-repository/commits/main';
         $request = wp_remote_get($url);
         $response = json_decode(wp_remote_retrieve_body($request), true);
         if ($response === false || !isset($response['commit']['committer']['date'])) {
             return null;
         }
-        return Helpers::date_to_version($response['commit']['committer']['date']);
+        return self::date_to_version($response['commit']['committer']['date']);
     }
 
     public static function replace_version_in_file(string $file, array $plugin_data, string $new_version): bool
@@ -293,8 +294,8 @@ class Helpers
         global $wp_filesystem;
         $contents = $wp_filesystem->get_contents($file);
 
-        $version_pattern = "/^(\s*\**\s*Version\s*:\s*)(.*)$/im";
-        $name_pattern = "/^(\s*\**\s*Plugin\s*Name\s*:\s*)(.*)$/im";
+        $version_pattern = '/^(\s*\**\s*Version\s*:\s*)(.*)$/im';
+        $name_pattern = '/^(\s*\**\s*Plugin\s*Name\s*:\s*)(.*)$/im';
         $has_version = (preg_match($version_pattern, $contents, $matches)) ? true : false;
 
         if ($has_version) {
@@ -321,7 +322,6 @@ class Helpers
             return $zipfile_url;
         }
 
-
         try {
             // create cache folder if it doesn't exist
             if (!is_dir($cache_path)) {
@@ -344,7 +344,7 @@ class Helpers
             // replace version number in newly downloaded plugin before zipping
             $new_plugin_file_path = $first_subfolder . \DIRECTORY_SEPARATOR . $slug . '.php';
             $current_plugin_data = get_plugin_data(WP_PLUGIN_DIR . \DIRECTORY_SEPARATOR . $plugin_file);
-            Helpers::replace_version_in_file($new_plugin_file_path, $current_plugin_data, $new_version);
+            self::replace_version_in_file($new_plugin_file_path, $current_plugin_data, $new_version);
 
             // wrap it up
             self::zip($zipfile_path, $first_subfolder, $slug);
@@ -359,7 +359,7 @@ class Helpers
 }
 
 
-class Bitbucket extends UpdaterBase
+class Bitbucket extends UpdaterBase //phpcs:ignore Generic.Files.OneObjectStructurePerFile.MultipleFound
 {
     protected static string $updateHost = 'api.bitbucket.org';
     protected string $apiBase = 'https://api.bitbucket.org/2.0/repositories';
@@ -479,7 +479,7 @@ class Bitbucket extends UpdaterBase
     }
 }
 
-class Github extends UpdaterBase
+class Github extends UpdaterBase //phpcs:ignore Generic.Files.OneObjectStructurePerFile.MultipleFound
 {
     protected static string $updateHost = 'api.github.com';
     protected string $apiBase = 'https://api.github.com/repos';
@@ -649,7 +649,10 @@ add_filter('plugin_row_meta', function ($plugin_meta, $plugin_file, $plugin_data
 }, 10, 4);
 
 add_action('admin_init', function () {
-    if (isset($_GET['action']) && $_GET['action'] === 'mu-update' && isset($_GET['file']) && $_GET['file'] === __FILE__) {
+    if (
+        isset($_GET['action']) && $_GET['action'] === 'mu-update' //phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        && isset($_GET['file']) && $_GET['file'] === __FILE__ //phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    ) {
         Helpers::update();
         $update_url = get_permalink();
         $update_url = remove_query_arg('action', $update_url);
@@ -659,7 +662,7 @@ add_action('admin_init', function () {
     }
 
     // for testing, reset update cache
-    wp_clean_update_cache();
+    // wp_clean_update_cache();
 
     foreach (UpdaterBase::getImplementations() as $updater) {
         $hook = 'update_plugins_' . $updater::getUpdateHost();
