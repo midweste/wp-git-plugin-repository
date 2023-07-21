@@ -1,4 +1,8 @@
 Use a Github/Bitbucket public repo api as a plugin repository for Wordpress plugin updates.
+Version is added or replaced with:
+-Datetime version when using commits as source
+-Release when using releases
+-Tag when using tags
 
 * GithubUpdater Plugin Updater
 * Specify Update URI: in your plugin comment block
