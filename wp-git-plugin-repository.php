@@ -4,7 +4,7 @@ namespace GitPluginRepository;
 
 /*
  * Plugin Name:       WordPress Github/Bitbucket Plugin Updater
- * Version: 2024.01.08.16.33.24
+ * Version: 2024.06.12.22.12.07
  * Plugin URI:        https://github.org/midweste/wp-git-plugin-repository
  * Description:       Use a Github/Bitbucket public repo api as a plugin repository for WordPress plugin updates.
  * Author:            Midweste
