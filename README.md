@@ -3,7 +3,7 @@
 Use a Github/Bitbucket public repo api as a plugin repository for Wordpress plugin updates.
 Works with Wordpress standard and automatic updates.
 Specify Update URI: in your plugin comment block to pull from remote repositories on update.
-***Coming soon - handling private repos. ***
+**Coming soon - handling private repos.**
 
 Version string in the plugin is added or replaced with:
 
@@ -11,20 +11,22 @@ Version string in the plugin is added or replaced with:
 - Release when using releases
 - Tag when using tags
 
-##To Install
+## To Install
 
-###As a normal plugin
-- Unzip and add to the plugins folder 
+### As a normal plugin
 
-###As a mu plugin
+- Unzip and add to the plugins folder
+
+### As a mu plugin
+
 - Unzip and add to the plugins folder
 - Make a symlink to mu/wp-git-plugin-repository-mu.php in the mu-plugins folder.
 
-##To Update Plugins
+## To Update Plugins
 
 Add **Update URI:** in your plugin comment block.
 
-###GithubUpdater Plugin Updater
+### GithubUpdater Plugin Updater
 
 Use releases for updates:
 
@@ -38,7 +40,7 @@ Use tags for updates:
 
 `Update URI: https://api.github.com/repos/{$repoOwner}/{$repoName}/ref/tags`
 
-###Bitbucket Plugin Updater
+### Bitbucket Plugin Updater
 
 Use a branch for updates:
 
@@ -47,4 +49,3 @@ Use a branch for updates:
 Use tags for updates:
 
 `Update URI: https://api.bitbucket.org/2.0/repositories/{$repoOwner}/{$repoName}/ref/tags`
-
