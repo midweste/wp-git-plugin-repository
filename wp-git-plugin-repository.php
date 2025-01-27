@@ -2,6 +2,8 @@
 
 namespace Midweste\GitPluginRepository;
 
+use Midweste\GitPluginRepository\Helpers;
+
 /*
  * Plugin Name:       WordPress Github/Bitbucket Plugin Updater
  * Version: 2023.08.31.16.52.40
