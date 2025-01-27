@@ -12,6 +12,7 @@ Version string in the plugin is added or replaced with:
 - Tag when using tags
 
 ##To Install
+
 ###As a normal plugin
 - Unzip and add to the plugins folder 
 
