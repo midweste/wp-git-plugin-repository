@@ -14,8 +14,9 @@ namespace Midweste\GitPluginRepository;
  */
 
 call_user_func(function () {
-    require_once __DIR__ . '/src/Helpers.php';
-    require_once __DIR__ . '/src/UpdaterBase.php';
+    foreach (glob(__DIR__ . '/src/*.php') as $file) {
+        require_once $file;
+    }
     foreach (glob(__DIR__ . '/src/Plugins/*.php') as $file) {
         require_once $file;
     }
