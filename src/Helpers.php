@@ -152,7 +152,7 @@ class Helpers
             }
 
             $update_data = $updater->update();
-            if (empty($update_data)) {
+            if (empty($update_data->package)) {
                 return false;
             }
 

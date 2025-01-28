@@ -76,11 +76,12 @@ add_action('admin_init', function () {
     }
 
     // for testing, reset update cache
-    wp_clean_update_cache();
+    // wp_clean_update_cache();
 
     foreach (UpdaterBase::getImplementations() as $updaterClass) {
         add_filter('update_plugins_' . $updaterClass::getUpdateHost(), function ($wp_update, $plugin_data, $plugin_file, $locales) use ($updaterClass) {
             try {
+                /* @var UpdaterBase $updater */
                 $updater = new $updaterClass($plugin_file);
                 return $updater->update($locales);
             } catch (\Throwable $e) {
