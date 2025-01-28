@@ -55,30 +55,34 @@ abstract class UpdaterBase
         return current(explode('/', $this->getPluginFile()));
     }
 
-    public function update($locales = []): ?object
+    public function update($locales = []): object
     {
         $version = !empty($this->getPluginData('Version')) ? $this->getPluginData('Version') : 0;
         $new_version = ltrim($this->getLatestVersion(), 'v');
+
+        $update_object = (object) [
+            'slug' => $this->getSlug(),  // needed for /wp-admin/update-core.php
+            'version' => $version,
+            'new_version' => $new_version,
+            'package' => null,
+        ];
+
         if (empty($new_version) || !version_compare($new_version, $version, '>')) {
-            return null;
+            return $update_object;
         }
 
         $package_url = $this->getLatestVersionZip();
         if (!filter_var($package_url, FILTER_VALIDATE_URL) || !$this->zipVerify($package_url)) {
-            return null;
+            return $update_object;
         }
 
         $package_local = Helpers::zip_proxy($package_url, $this->getPluginFile(), $new_version);
         if (empty($package_local)) {
-            return null;
+            return $update_object;
         }
-        $update = (object) [
-            'slug' => $this->getSlug(),  // needed for /wp-admin/update-core.php
-            'version' => $version,
-            'new_version' => $new_version,
-            'package' => $package_local,
-        ];
-        return $update;
+
+        $update_object->package = $package_local;
+        return $update_object;
     }
 
     protected function request(string $url)
