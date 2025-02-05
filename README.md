@@ -17,11 +17,6 @@ Version string in the plugin is added or replaced with:
 
 - Unzip and add to the plugins folder
 
-### As a mu plugin
-
-- Unzip and add to the plugins folder
-- Make a symlink to mu/wp-git-plugin-repository-mu.php in the mu-plugins folder.
-
 ## To Update Plugins
 
 Add **Update URI:** in your plugin comment block.
